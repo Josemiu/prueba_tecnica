@@ -126,74 +126,116 @@ Las dos sincronizaciones solo toman en cuenta a los colaboradores que ya están 
 
 ## Cómo probarlo
 
-Los ejemplos están con la sintaxis de `cmd` en Windows. En Linux o Mac hay que usar comillas simples para el JSON.
-
+Los ejemplos de `curl` están con la sintaxis de `cmd` en Windows. En Linux o Mac hay que usar comillas simples para el JSON.
+ 
+Algunos pasos necesitan ejecutar SQL sobre la base de datos. Ese SQL no se pega directo en la terminal, porque no es un comando de Windows. Hay dos formas de ejecutarlo:
+ 
+- **Opción A: una sola línea con `-c`**, desde la terminal normal:
+```bash
+  psql -U postgres -d cupo_vehicular -c "SELECT * FROM MOVIMIENTOS;"
+```
+ 
+- **Opción B: entrar a `psql` y pegar la consulta ahí**:
+```bash
+  psql -U postgres -d cupo_vehicular
+```
+ 
+  Dentro de `psql` se escribe la consulta terminada en `;` y se sale con `\q`.
+ 
+En cada paso de abajo muestro las dos opciones.
+ 
 **1. Crear colaborador, actualizar cupo y acreditar**
-
+ 
 ```bash
 curl -X POST http://localhost:3000/dev/colaboradores -H "Content-Type: application/json" -d "{\"cedula\":\"0912345678\",\"cupo_mensual\":200}"
-
+ 
 curl -X PUT http://localhost:3000/dev/colaboradores/0912345678/cupo -H "Content-Type: application/json" -d "{\"cupo_mensual\":300}"
-
+ 
 curl -X POST http://localhost:3000/dev/colaboradores/0912345678/acreditar
 ```
-
+ 
 La última respuesta debe mostrar `"saldo":300`.
-
+ 
 **2. Sincronizar GasClub**
-
+ 
 ```bash
 curl -X POST http://localhost:3000/dev/sync/gasclub
 ```
-
+ 
 Con los datos de ejemplo debe insertar 2 consumos de la cédula `0912345678`. Los de cédulas que no están registradas se ignoran.
-
-También se pueden insertar consumos a mano en `SGR_GASCLUB_GASTOS` y volver a sincronizar:
-
+ 
+También se pueden insertar consumos a mano en `SGR_GASCLUB_GASTOS` y volver a sincronizar.
+ 
+Opción A:
+ 
+```bash
+psql -U postgres -d cupo_vehicular -c "INSERT INTO SGR_GASCLUB_GASTOS (ID, CEDULA, REFERENCIA, TOTAL, FECHA) VALUES (11, '0912345678', 'GC-009999', 10.00, '2026-10-24');"
+```
+ 
+Opción B (dentro de `psql`):
+ 
 ```sql
 INSERT INTO SGR_GASCLUB_GASTOS (ID, CEDULA, REFERENCIA, TOTAL, FECHA)
 VALUES (11, '0912345678', 'GC-009999', 10.00, '2026-10-24');
 ```
-
+ 
+Después se vuelve a ejecutar `sync/gasclub`, que debe insertar 1.
+ 
 **3. Registrar una factura, aprobarla y sincronizar**
-
+ 
 ```bash
 curl -X POST http://localhost:3000/dev/facturas -H "Content-Type: application/json" -d "{\"cedula\":\"0912345678\",\"numero_factura\":\"001-001-000001000\",\"ruc_proveedor\":\"1790012345001\",\"total\":10}"
 ```
-
+ 
 Queda en estado `Pendiente`. Para simular la aprobación del asistente contable:
-
+ 
+Opción A:
+ 
+```bash
+psql -U postgres -d cupo_vehicular -c "UPDATE SGR_FACTURAS SET ESTADO = 'Aprobado' WHERE NUMERO_FACTURA = '001-001-000001000';"
+```
+ 
+Opción B (dentro de `psql`):
+ 
 ```sql
 UPDATE SGR_FACTURAS SET ESTADO = 'Aprobado' WHERE NUMERO_FACTURA = '001-001-000001000';
 ```
-
+ 
 Y después se sincroniza:
-
+ 
 ```bash
 curl -X POST http://localhost:3000/dev/sync/facturas
 ```
-
+ 
 La respuesta debe indicar `"actualizadas":1` (más las facturas del ejemplo que se inserten la primera vez).
-
+ 
 **4. Verificar en la base de datos**
-
+ 
+Opción A:
+ 
+```bash
+psql -U postgres -d cupo_vehicular -c "SELECT * FROM MOVIMIENTOS ORDER BY ID;"
+psql -U postgres -d cupo_vehicular -c "SELECT * FROM CUPO_HISTORIAL;"
+```
+ 
+Opción B (dentro de `psql`):
+ 
 ```sql
 SELECT * FROM MOVIMIENTOS ORDER BY ID;
 SELECT * FROM CUPO_HISTORIAL;
 ```
-
+ 
 **5. Probar que no se duplica nada**
-
+ 
 Si se ejecutan `sync/gasclub` y `sync/facturas` otra vez sin cambios, ambos devuelven `0`.
-
+ 
 **6. Probar la validación de saldo**
-
+ 
 Una factura con un total mayor al saldo disponible responde con error 400:
-
+ 
 ```bash
 curl -X POST http://localhost:3000/dev/facturas -H "Content-Type: application/json" -d "{\"cedula\":\"0912345678\",\"numero_factura\":\"001-001-000009999\",\"ruc_proveedor\":\"1790012345001\",\"total\":5000}"
 ```
-
 ## Notas
 
 - El saldo no se guarda en ninguna tabla: se calcula como la suma de acreditaciones menos la suma de gastos en `MOVIMIENTOS`.

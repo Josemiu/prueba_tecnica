@@ -30,7 +30,7 @@ Además de las dos tablas que daba el enunciado (`SGR_FACTURAS` y `SGR_GASCLUB_G
 
 **GasClub no valida el saldo.** Esos consumos ya ocurrieron, así que siempre se registran y el saldo puede quedar negativo. En cambio, al registrar una factura por el endpoint sí compruebo que el total no supere el saldo.
 
-## Cosas que dejé simples
+## Notas
 
 - No usé transacciones ni manejo de concurrencia. Si dos personas registraran una factura al mismo tiempo, podrían pasar las dos validaciones de saldo. Para el alcance de la prueba lo dejé así.
 - Agregué una validación que no estaba en el enunciado: no dejo registrar dos facturas con el mismo número para la misma cédula. Sin eso, la sincronización no podría saber cuál es cuál.

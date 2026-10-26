@@ -1,0 +1,58 @@
+service: prueba-tecnica
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+  environment:
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_USER: ${env:DB_USER}
+    DB_HOST: ${env:DB_HOST}
+    DB_PORT: ${env:DB_PORT}
+    DB_NAME: ${env:DB_NAME}
+
+functions:
+  crearColaborador:
+    handler: handler.crearColaborador
+    events:
+      - http:
+          path: colaboradores
+          method: post
+
+  actualizarCupo:
+    handler: handler.actualizarCupo
+    events:
+      - http:
+          path: colaboradores/{cedula}/cupo
+          method: put
+
+  acreditarCupo:
+    handler: handler.acreditarCupo
+    events:
+      - http:
+          path: colaboradores/{cedula}/acreditar
+          method: post
+
+  registrarFactura:
+    handler: handler.registrarFactura
+    events:
+      - http:
+          path: facturas
+          method: post
+
+  sincronizarFacturas:
+    handler: handler.sincronizarFacturas
+    events:
+      - http:
+          path: sync/facturas
+          method: post
+
+  sincronizarGasClub:
+    handler: handler.sincronizarGasClub
+    events:
+      - http:
+          path: sync/gasclub
+          method: post

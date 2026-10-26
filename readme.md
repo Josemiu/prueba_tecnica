@@ -75,7 +75,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=cupo_vehicular
 DB_USER=postgres
-DB_PASSWORD=tu_password
+DB_PASSWORD=tu_contrasenia
 ```
 
 Las cinco variables son obligatorias: si falta alguna, Serverless no arranca.

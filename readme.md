@@ -15,16 +15,24 @@ Serverless v4 pide una cuenta gratuita. La primera vez hay que ejecutar `npx ser
 
 ## Estructura del proyecto
 
-
-├── serverless.yml        # Configuración y rutas de las 6 funciones
-├── handler.js            # Lógica de los 6 endpoints
-├── connection.js         # Conexión a PostgreSQL
+```
+.
+├── serverless.yml
+├── handler.js
+├── connection.js
 ├── sql/
-│   ├── tables_from_doc.sql   # Tablas del enunciado + datos de ejemplo
-│   └── tables.sql            # Tablas que diseñé yo
-├── .env.example          # Ejemplo de variables de entorno
-├── DISEÑO.md             # Modelo de datos y decisiones
+│   ├── tables_from_doc.sql
+│   └── tables.sql
+├── .env.example
+├── DISEÑO.md
 └── README.md
+```
+
+- `handler.js`: el código de los 6 endpoints.
+- `connection.js`: la conexión a PostgreSQL.
+- `sql/tables_from_doc.sql`: las tablas del enunciado con sus datos de ejemplo.
+- `sql/tables.sql`: las tablas que diseñé yo.
+- `DISEÑO.md`: explicación del modelo de datos y mis decisiones.
 
 
 ## Cómo ejecutarlo
@@ -69,8 +77,6 @@ Las cinco variables son obligatorias: si falta alguna, Serverless no arranca.
 npx serverless offline
 
 Queda disponible en `http://localhost:3000/dev`. Ojo que `serverless-offline` agrega el `/dev` en la URL.
-
-## Endpoints
 
 ## Endpoints
 
